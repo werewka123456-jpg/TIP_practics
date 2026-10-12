@@ -1,50 +1,155 @@
-// Заготовка модуля. throw ниже отмечает отсутствие реализации,
-// а не способ обработки некорректных данных в готовом решении.
-// Для предусмотренных ошибок необходимо возвращать { ok: false, error: "..." }.
-// console.log(), prompt(), document и чтение внешнего состояния здесь не нужны.
+// ============================================================
+// Внутренние помощники (НЕ экспортируются, объявлены СНАРУЖИ)
+// ============================================================
 
-export function createTask(id, title, priority = "medium") {
-  // TODO: проверить поля и вернуть результат создания задачи.
-  throw new Error("Не реализовано: createTask");
+function isValidId(id) {
+  return typeof id === "number" && Number.isSafeInteger(id) && id > 0;
 }
 
+function normalizeTitle(title) {
+  if (typeof title !== "string") {
+    return { ok: false, error: "Название должно быть строкой" };
+  }
+  const trimmed = title.trim();
+  if (trimmed.length < 1 || trimmed.length > 100) {
+    return { ok: false, error: "Длина названия должна быть от 1 до 100 символов" };
+  }
+  return { ok: true, title: trimmed };
+}
+
+function isValidPriority(priority) {
+  return priority === "low" || priority === "medium" || priority === "high";
+}
+
+// ============================================================
+// Задание 2. createTask
+// ============================================================
+
+export function createTask(id, title, priority = "medium") {
+  if (!isValidId(id)) {
+    return { ok: false, error: "id должен быть положительным целым числом" };
+  }
+
+  const titleResult = normalizeTitle(title);
+  if (!titleResult.ok) {
+    return titleResult;
+  }
+
+  if (!isValidPriority(priority)) {
+    return { ok: false, error: 'Приоритет должен быть "low", "medium" или "high"' };
+  }
+
+  return {
+    ok: true,
+    task: {
+      id,
+      title: titleResult.title,
+      completed: false,
+      priority,
+    },
+  };
+}
+
+// ============================================================
+// Задание 3 (пока заглушки — реализуем позже)
+// ============================================================
+
 export function findTaskById(tasks, id) {
-  // TODO: найти задачу с помощью find(); отсутствие результата — undefined.
-  throw new Error("Не реализовано: findTaskById");
+  return tasks.find((task) => task.id === id);
 }
 
 export function getPendingTasks(tasks) {
-  // TODO: вернуть новый массив невыполненных задач с помощью filter().
-  throw new Error("Не реализовано: getPendingTasks");
+  return tasks.filter((task) => task.completed === false);
 }
 
 export function getTaskTitles(tasks) {
-  // TODO: вернуть массив названий с помощью map().
-  throw new Error("Не реализовано: getTaskTitles");
+  return tasks.map((task) => task.title);
 }
 
 export function getTaskStats(tasks) {
-  // TODO: вернуть { total, completed, pending, progress }.
-  throw new Error("Не реализовано: getTaskStats");
+  const total = tasks.length;
+  const completed = tasks.filter((task) => task.completed === true).length;
+  const pending = total - completed;
+  const progress = total > 0 ? (completed / total) * 100 : 0;
+  return { total, completed, pending, progress };
 }
 
+// ============================================================
+//                      Задание 4 
+// ============================================================
+
 export function addTask(tasks, id, title, priority = "medium") {
-  // TODO: проверить данные через createTask(), исключить дублирование id,
-  // вернуть { ok: true, tasks: новыйМассив } без изменения исходного массива.
-  throw new Error("Не реализовано: addTask");
+  if (!isValidId(id)) {
+    return { ok: false, error: "id должен быть положительным целым числом" };
+  }
+
+  const exists = tasks.find((task) => task.id === id);
+  if (exists !== undefined) {
+    return { ok: false, error: `Задача с id = ${id} уже существует` };
+  }
+
+  const created = createTask(id, title, priority);
+  if (!created.ok) {
+    return created;
+  }
+
+  return { ok: true, tasks: [...tasks, created.task] };
 }
 
 export function setTaskCompleted(tasks, id, completed) {
-  // TODO: проверить id и completed, найти задачу, создать обновлённые данные.
-  throw new Error("Не реализовано: setTaskCompleted");
+  if (!isValidId(id)) {
+    return { ok: false, error: "id должен быть положительным целым числом" };
+  }
+
+  if (typeof completed !== "boolean") {
+    return { ok: false, error: "completed должен быть true или false" };
+  }
+
+  const target = tasks.find((task) => task.id === id);
+  if (target === undefined) {
+    return { ok: false, error: `Задача с id = ${id} не найдена` };
+  }
+
+  const newTasks = tasks.map((task) =>
+    task.id === id ? { ...task, completed } : task
+  );
+
+  return { ok: true, tasks: newTasks };
 }
 
 export function renameTask(tasks, id, title) {
-  // TODO: проверить id и title, изменить только название выбранной задачи.
-  throw new Error("Не реализовано: renameTask");
+  if (!isValidId(id)) {
+    return { ok: false, error: "id должен быть положительным целым числом" };
+  }
+
+  const titleResult = normalizeTitle(title);
+  if (!titleResult.ok) {
+    return titleResult;
+  }
+
+  const target = tasks.find((task) => task.id === id);
+  if (target === undefined) {
+    return { ok: false, error: `Задача с id = ${id} не найдена` };
+  }
+
+  const newTasks = tasks.map((task) =>
+    task.id === id ? { ...task, title: titleResult.title } : task
+  );
+
+  return { ok: true, tasks: newTasks };
 }
 
 export function removeTask(tasks, id) {
-  // TODO: проверить id, обработать отсутствие задачи, вернуть новый массив.
-  throw new Error("Не реализовано: removeTask");
+  if (!isValidId(id)) {
+    return { ok: false, error: "id должен быть положительным целым числом" };
+  }
+
+  const target = tasks.find((task) => task.id === id);
+  if (target === undefined) {
+    return { ok: false, error: `Задача с id = ${id} не найдена` };
+  }
+
+  const newTasks = tasks.filter((task) => task.id !== id);
+
+  return { ok: true, tasks: newTasks };
 }

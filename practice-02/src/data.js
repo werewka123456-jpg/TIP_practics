@@ -1,5 +1,5 @@
-// Общий контрольный набор. Для своего варианта ниже предусмотрен отдельный массив.
-// Идентификатор задачи не совпадает с её индексом в массиве.
+export const variantNumber = 3;
+
 export const demoTasks = [
   { id: 1, title: "Изучить функции", completed: true, priority: "medium" },
   { id: 4, title: "Подготовить модель задач", completed: false, priority: "high" },
@@ -7,7 +7,11 @@ export const demoTasks = [
   { id: 10, title: "Оформить README", completed: true, priority: "medium" },
 ];
 
-// TODO: указать свой вариант и подготовить шесть задач по разделу 7 методички.
-// Пустой массив — заготовка, а не выполненный индивидуальный вариант.
-export const variantNumber = null;
-export const variantTasks = [];
+export const variantTasks = [
+  { id: 11, title: "Собрать примеры работ", completed: true, priority: "high" },
+  { id: 23, title: "Написать раздел «Обо мне»", completed: true, priority: "medium" },
+  { id: 37, title: "Сверстать главную страницу", completed: false, priority: "low" },
+  { id: 41, title: "Подключить форму связи", completed: false, priority: "high" },
+  { id: 58, title: "Проверить адаптивность", completed: false, priority: "medium" },
+  { id: 64, title: "Опубликовать сайт", completed: false, priority: "low" },
+];
