@@ -1,8 +1,7 @@
 "use strict";
 
-const totalTasks = 9;
-const completedTasks = 9;
-const dailyLimit = 3;
+const totalTasks = 5;
+const completedTasks = 6;
 
 if (
   typeof totalTasks !== "number" ||
