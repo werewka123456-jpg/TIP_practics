@@ -1,87 +1,166 @@
-const PRIORITIES = ["low", "medium", "high"];
+"use strict";
 
-function fail(message) {
-  return { ok: false, error: message };
-}
-
-function isValidId(id) {
-  return Number.isSafeInteger(id) && id > 0;
-}
+const ALLOWED_PRIORITIES = new Set(["low", "medium", "high"]);
 
 function normalizeTitle(title) {
-  if (typeof title !== "string") return null;
+  if (typeof title !== "string") {
+    return { ok: false, error: "Название должно быть строкой" };
+  }
   const trimmed = title.trim();
-  if (trimmed.length < 1 || trimmed.length > 100) return null;
-  return trimmed;
+  if (trimmed.length === 0) {
+    return { ok: false, error: "Название не может быть пустым" };
+  }
+  if (trimmed.length > 100) {
+    return { ok: false, error: "Название не должно превышать 100 символов" };
+  }
+  return { ok: true, title: trimmed };
 }
 
-function isValidPriority(priority) {
-  return PRIORITIES.includes(priority);
+function checkId(id) {
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    return { ok: false, error: "ID должен быть положительным целым числом" };
+  }
+  return { ok: true };
 }
 
 export function createTask(id, title, priority = "medium") {
-  if (!isValidId(id)) return fail("Некорректный идентификатор задачи.");
-  const normalized = normalizeTitle(title);
-  if (normalized === null) return fail("Название должно быть непустой строкой до 100 символов.");
-  if (!isValidPriority(priority)) return fail("Недопустимый приоритет задачи.");
-  return { ok: true, task: { id, title: normalized, completed: false, priority } };
+  const idCheck = checkId(id);
+  if (!idCheck.ok) return idCheck;
+
+  const titleCheck = normalizeTitle(title);
+  if (!titleCheck.ok) return titleCheck;
+
+  if (!ALLOWED_PRIORITIES.has(priority)) {
+    return { ok: false, error: "Недопустимый приоритет" };
+  }
+
+  return {
+    ok: true,
+    task: { id, title: titleCheck.title, completed: false, priority },
+  };
 }
 
 export function findTaskById(tasks, id) {
+  if (!Array.isArray(tasks)) return undefined;
   return tasks.find((task) => task.id === id);
 }
 
 export function getPendingTasks(tasks) {
-  return tasks.filter((task) => task.completed === false);
+  if (!Array.isArray(tasks)) return [];
+  return tasks.filter((task) => !task.completed);
 }
 
 export function getTaskTitles(tasks) {
+  if (!Array.isArray(tasks)) return [];
   return tasks.map((task) => task.title);
 }
 
 export function getTaskStats(tasks) {
-  const total = tasks.length;
-  const completed = tasks.filter((task) => task.completed).length;
+  const list = Array.isArray(tasks) ? tasks : [];
+  const total = list.length;
+  const completed = list.filter((task) => task.completed).length;
   const pending = total - completed;
   const progress = total === 0 ? 0 : (completed / total) * 100;
   return { total, completed, pending, progress };
 }
 
 export function addTask(tasks, id, title, priority = "medium") {
-  if (findTaskById(tasks, id)) {
-    return fail("Задача с таким идентификатором уже существует.");
+  if (!Array.isArray(tasks)) {
+    return { ok: false, error: "Список задач должен быть массивом" };
   }
+  const idCheck = checkId(id);
+  if (!idCheck.ok) return idCheck;
+
+  if (tasks.some((task) => task.id === id)) {
+    return { ok: false, error: "Задача с таким ID уже существует" };
+  }
+
   const created = createTask(id, title, priority);
   if (!created.ok) return created;
+
   return { ok: true, tasks: [...tasks, created.task] };
 }
 
 export function setTaskCompleted(tasks, id, completed) {
-  if (!isValidId(id)) return fail("Некорректный идентификатор задачи.");
-  if (typeof completed !== "boolean") return fail("Статус должен быть логическим значением.");
+  if (!Array.isArray(tasks)) {
+    return { ok: false, error: "Список задач должен быть массивом" };
+  }
+  const idCheck = checkId(id);
+  if (!idCheck.ok) return idCheck;
+
   const index = tasks.findIndex((task) => task.id === id);
-  if (index === -1) return fail("Задача не найдена.");
-  const next = tasks.map((task, i) =>
-    i === index ? { ...task, completed } : task,
+  if (index === -1) {
+    return { ok: false, error: "Задача с таким id не найдена" };
+  }
+
+  const nextValue =
+    typeof completed === "boolean" ? completed : !tasks[index].completed;
+
+  const nextTasks = tasks.map((task, i) =>
+    i === index ? { ...task, completed: nextValue } : task,
   );
-  return { ok: true, tasks: next };
+
+  return { ok: true, tasks: nextTasks };
 }
 
 export function renameTask(tasks, id, title) {
-  if (!isValidId(id)) return fail("Некорректный идентификатор задачи.");
-  const normalized = normalizeTitle(title);
-  if (normalized === null) return fail("Название должно быть непустой строкой до 100 символов.");
+  if (!Array.isArray(tasks)) {
+    return { ok: false, error: "Список задач должен быть массивом" };
+  }
+  const idCheck = checkId(id);
+  if (!idCheck.ok) return idCheck;
+
   const index = tasks.findIndex((task) => task.id === id);
-  if (index === -1) return fail("Задача не найдена.");
-  const next = tasks.map((task, i) =>
-    i === index ? { ...task, title: normalized } : task,
+  if (index === -1) {
+    return { ok: false, error: "Задача с таким id не найдена" };
+  }
+
+  const titleCheck = normalizeTitle(title);
+  if (!titleCheck.ok) return titleCheck;
+
+  const nextTasks = tasks.map((task, i) =>
+    i === index ? { ...task, title: titleCheck.title } : task,
   );
-  return { ok: true, tasks: next };
+
+  return { ok: true, tasks: nextTasks };
 }
 
 export function removeTask(tasks, id) {
-  if (!isValidId(id)) return fail("Некорректный идентификатор задачи.");
-  if (!findTaskById(tasks, id)) return fail("Задача не найдена.");
-  const next = tasks.filter((task) => task.id !== id);
-  return { ok: true, tasks: next };
+  if (!Array.isArray(tasks)) {
+    return { ok: false, error: "Список задач должен быть массивом" };
+  }
+  const idCheck = checkId(id);
+  if (!idCheck.ok) return idCheck;
+
+  if (!tasks.some((task) => task.id === id)) {
+    return { ok: false, error: "Задача с таким id не найдена" };
+  }
+
+  return { ok: true, tasks: tasks.filter((task) => task.id !== id) };
+}
+
+export function updateTask(tasks, id, title, priority) {
+  if (!Array.isArray(tasks)) {
+    return { ok: false, error: "Список задач должен быть массивом" };
+  }
+  const idCheck = checkId(id);
+  if (!idCheck.ok) return idCheck;
+
+  const index = tasks.findIndex((task) => task.id === id);
+  if (index === -1) {
+    return { ok: false, error: "Задача с таким id не найдена" };
+  }
+
+  const titleCheck = normalizeTitle(title);
+  if (!titleCheck.ok) return titleCheck;
+
+  if (!ALLOWED_PRIORITIES.has(priority)) {
+    return { ok: false, error: "Недопустимый приоритет" };
+  }
+
+  const nextTasks = tasks.map((task, i) =>
+    i === index ? { ...task, title: titleCheck.title, priority } : task,
+  );
+
+  return { ok: true, tasks: nextTasks };
 }

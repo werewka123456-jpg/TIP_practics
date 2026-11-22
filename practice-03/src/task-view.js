@@ -12,9 +12,7 @@ export function createTaskElement(task) {
   const li = document.createElement("li");
   li.className = "task-card";
   li.dataset.taskId = String(task.id);
-  if (task.completed) {
-    li.classList.add("is-completed");
-  }
+  if (task.completed) li.classList.add("is-completed");
 
   const title = document.createElement("h3");
   title.className = "task-title";
@@ -45,6 +43,15 @@ export function createTaskElement(task) {
   toggleBtn.append(toggleLabel);
   actions.append(toggleBtn);
 
+  const editBtn = document.createElement("button");
+  editBtn.type = "button";
+  editBtn.dataset.action = "edit";
+  const editLabel = document.createElement("span");
+  editLabel.className = "action-label";
+  editLabel.textContent = "Изменить";
+  editBtn.append(editLabel);
+  actions.append(editBtn);
+
   const deleteBtn = document.createElement("button");
   deleteBtn.type = "button";
   deleteBtn.dataset.action = "delete";
@@ -63,14 +70,12 @@ export function renderTaskList(listElement, tasks) {
   listElement.replaceChildren(...cards);
 }
 
-export function renderSummary(summaryElement, tasks, visibleCount) {
+export function renderSummary(summaryElement, tasks, visibleCount = tasks.length) {
   const stats = getTaskStats(tasks);
-
   const set = (name, value) => {
     const node = summaryElement.querySelector(`[data-stat="${name}"]`);
     if (node) node.textContent = String(value);
   };
-
   set("total", stats.total);
   set("completed", stats.completed);
   set("pending", stats.pending);
@@ -84,11 +89,7 @@ export function renderEmptyState(messageElement, total, visibleCount) {
     messageElement.hidden = true;
     return;
   }
-
-  if (total === 0) {
-    messageElement.textContent = "Список задач пуст.";
-  } else {
-    messageElement.textContent = "Нет задач по выбранному фильтру.";
-  }
+  messageElement.textContent =
+    total === 0 ? "Список задач пуст." : "Нет задач по выбранному фильтру.";
   messageElement.hidden = false;
 }

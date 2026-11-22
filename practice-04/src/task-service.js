@@ -74,8 +74,10 @@ export function setTaskCompleted(tasks, id, completed) {
     return { ok: false, error: "Задача с таким id не найдена" };
   }
 
-  // Если completed не передан (undefined), инвертируем текущий статус
-  const nextValue = typeof completed === "boolean" ? completed : !tasks[index].completed;
+  if (typeof completed !== "boolean") {
+    return { ok: false, error: "completed должен быть boolean" };
+  }
+  const nextValue = completed;
 
   const nextTasks = tasks.map((task, i) =>
     i === index ? { ...task, completed: nextValue } : task

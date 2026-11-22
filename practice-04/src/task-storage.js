@@ -1,4 +1,4 @@
-const SCHEMA_VERSION = 1;
+export const STORAGE_VERSION = 1;
 
 export function isValidTaskList(value) {
   if (!Array.isArray(value)) return false;
@@ -37,7 +37,7 @@ export function loadTasks(storage, key, fallbackTasks) {
 
     const parsed = JSON.parse(raw);
 
-    if (!parsed || typeof parsed !== "object" || parsed.version !== SCHEMA_VERSION || !isValidTaskList(parsed.tasks)) {
+    if (!parsed || typeof parsed !== "object" || parsed.version !== STORAGE_VERSION || !isValidTaskList(parsed.tasks)) {
       return { 
         ok: false, 
         source: "fallback", 
@@ -69,7 +69,7 @@ export function saveTasks(storage, key, tasks) {
 
   try {
     const wrapper = {
-      version: SCHEMA_VERSION,
+      version: STORAGE_VERSION,
       tasks: tasks
     };
     storage.setItem(key, JSON.stringify(wrapper));
