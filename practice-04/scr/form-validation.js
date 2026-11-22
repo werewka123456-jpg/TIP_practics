@@ -3,18 +3,12 @@ const ALLOWED_PRIORITIES = new Set(["low", "medium", "high"]);
 // Чистая проверка данных формы. DOM и показ сообщений выполняются в main.js.
 // draft: { id, title, priority }; editingId: null либо id редактируемой задачи.
 export function validateTaskDraft(draft, tasks, editingId = null) {
-  // TODO: нормализовать и проверить id, title и priority.
-  // В режиме создания id должен быть уникальным.
-  // В режиме редактирования используется editingId и проверяется наличие задачи.
-  // Успех: { ok: true, value: { id, title, priority } }.
-  // Отказ: { ok: false, errors: { id?: "...", title?: "...", priority?: "..." } }.
-  // ALLOWED_PRIORITIES можно использовать при проверке приоритета.
-
   const errors = {};
   let id;
   let title;
   let priority;
 
+  // 1. Проверка ID
   if (editingId !== null) {
     id = editingId;
     const taskExists = tasks.some(task => task.id === id);
@@ -35,6 +29,7 @@ export function validateTaskDraft(draft, tasks, editingId = null) {
     }
   }
 
+  // 2. Проверка названия (title)
   if (typeof draft.title !== "string") {
     errors.title = "Название должно быть строкой";
   } else {
@@ -46,13 +41,14 @@ export function validateTaskDraft(draft, tasks, editingId = null) {
     }
   }
 
-  const validPriorities = ["low", "medium", "high"];
-  if (!validPriorities.includes(draft.priority)) {
+  // 3. Проверка приоритета (priority)
+  if (!ALLOWED_PRIORITIES.has(draft.priority)) {
     errors.priority = "Недопустимый приоритет";
   } else {
     priority = draft.priority;
   }
 
+  // 4. Возврат результата
   if (Object.keys(errors).length > 0) {
     return { ok: false, errors };
   }
@@ -61,10 +57,4 @@ export function validateTaskDraft(draft, tasks, editingId = null) {
     ok: true,
     value: { id, title, priority }
   };
-}
-  void ALLOWED_PRIORITIES;
-  void draft;
-  void tasks;
-  void editingId;
-  throw new Error("Не реализовано: validateTaskDraft");
 }
