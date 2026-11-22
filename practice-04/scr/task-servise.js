@@ -49,8 +49,33 @@ export function removeTask(tasks, id) {
 }
 
 export function updateTask(tasks, id, title, priority) {
-  // TODO ПР4: проверить id, существование задачи, title и priority.
-  // Вернуть новый массив, изменив только title и priority выбранной задачи.
-  // Поле completed и исходный массив должны сохраниться.
+  if (!Array.isArray(tasks)) {
+    return { ok: false, error: "Список задач должен быть массивом" };
+  }
+
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    return { ok: false, error: "Некорректный идентификатор задачи" };
+  }
+
+  const taskIndex = tasks.findIndex((task) => task.id === id);
+  if (taskIndex === -1) {
+    return { ok: false, error: "Задача с таким id не найдена" };
+  }
+
+  const validation = createTask(1, title, priority);
+  if (!validation.ok) {
+    return { ok: false, error: validation.error };
+  }
+
+  const updatedTasks = [...tasks];
+
+  updatedTasks[taskIndex] = {
+    ...updatedTasks[taskIndex], 
+    title: validation.task.title, 
+    priority: validation.task.priority,
+  };
+
+  return { ok: true, tasks: updatedTasks };
+}
   throw new Error("Не реализовано: updateTask");
 }
